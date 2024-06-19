@@ -68,12 +68,14 @@ static void *receive_message(void *fun_arg)
         memset(buffer, 0, sizeof(buffer));
         if (read(*server_fd, &receive_byte, sizeof(receive_byte)) == 0)
         {
-            printf("disconnect from server\n");
+            printf("\033[1;33m\nDisconnect from server\033[0m\n");
+
             exit(0);
         }
         if (read(*server_fd, buffer, receive_byte) == 0)
         {
-            printf("disconnect from server\n");
+            printf("\033[1;33m\nDisconnect from server\033[0m\n");
+
             exit(0);
         }
         sscanf(buffer, "%[^:]: %[0-9abcdef]", name, hex_message);
@@ -136,7 +138,7 @@ int setname(int server_fd)
     char name[100];
     uint16_t send_byte;
 
-    printf("chat name: ");
+    printf("Chat name: ");
     fgets(name, sizeof(name), stdin);
     name[strlen(name) - 1] = 0;
     send_byte = strlen(name);
@@ -148,6 +150,19 @@ int main()
 {
     int status, login_status;
     struct sockaddr_in server_addr;
+    char server_ip[INET_ADDRSTRLEN] = "127.0.0.1";
+    int server_port;
+
+    printf("===========================================\n");
+    printf("\033[1;33mSetting up connection to the server...\033[0m\n\n");
+    // Ask user for the IP address of the server
+    printf("Enter server IP address: ");
+    scanf("%s", server_ip);
+    getchar(); // To consume the newline character left by scanf
+
+    printf("Enter server port number: ");
+    scanf("%d", &server_port);
+    getchar(); // To consume the newline character left by scanf
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1)
@@ -158,8 +173,8 @@ int main()
 
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT_NUM);
-    if (inet_pton(AF_INET, SERVER_ADDR, &server_addr.sin_addr) == -1)
+    server_addr.sin_port = htons(server_port);
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) == -1)
     {
         fprintf(stderr, "server_addr fail\n");
         exit(0);
@@ -172,7 +187,8 @@ int main()
         exit(0);
     }
 
-    printf("connect to server!\n");
+    printf("\033[1;32mConnect to server!\033[0m\n");
+
     setname(server_fd);
     pthread_create(&receive_thread, NULL, receive_message, &server_fd);
     pthread_create(&sent_thread, NULL, send_message, &server_fd);
